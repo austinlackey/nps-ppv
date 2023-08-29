@@ -12,12 +12,18 @@ https://shiny.rstudio.com/gallery/explore-panel-data.html
 C:\Users\alackey\OneDrive - DOI\Desktop\NPS Internship\PPV Study Automation\TEST March Raw PPV Data.xlsx
 ```{r}
 source("ppvFunctions.R")
-sheet_one <- formatData(read_excel("C:/Users/alackey/OneDrive - DOI/Desktop/NPS Internship/PPV Study Automation/TEST December Raw PPV Data.xlsx", sheet = 1))
-sheet_two <- formatData(read_excel("C:/Users/alackey/OneDrive - DOI/Desktop/NPS Internship/PPV Study Automation/TEST December Raw PPV Data.xlsx", sheet = 2))
+sheet_one <- formatSheet1(read_excel("C:/Users/alackey/OneDrive - DOI/Desktop/NPS Internship/PPV Study Automation/GUMO April Raw PPV Data.xlsx", sheet = 1))
+sheet_two <- formatSheet2(read_excel("C:/Users/alackey/OneDrive - DOI/Desktop/NPS Internship/PPV Study Automation/GUMO April Raw PPV Data.xlsx", sheet = 2))
 ```
 
 ```{r}
+head(sheet_one)
+head(sheet_two)
+```
 
+```{r}
+source("ppvFunctions.R")
+getFigHistogram(sheet_two, "-1")$data
 ```
 
 ```{r}
@@ -29,17 +35,4 @@ filt <- applyRanges(sheet_two, checkRange(test_ranges)$ranges)
 
 ```{r}
 source("ppvFunctions.R")
-poiReg(filt)$plot
-```
-
-```{r}
-
-```
-
-```{r}
-a <- figRange(applyRanges(sheet_two, checkRange(test_ranges)$ranges_plot))
-b <- customGP(filt, "monthNum", "group")
-c <- customGP(filt, "monthNum", "entrance")
-s1 <- (b | c) / c
-s1
 ```

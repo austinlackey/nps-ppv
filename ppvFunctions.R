@@ -12,23 +12,49 @@ library(shinyjs)
 library(shinythemes)
 library(shinydashboard)
 library(shinyWidgets)
-# Below are variables to refrence plot color and names
+library(formattable)
+library(lubridate)
+
+#!#################################################################
+#!###################      Code for Colors     ####################
+#!#################################################################
 palette <- hue_pal()(16)
 month.name <- c("January", "Febuary", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December")
 g.code <- c("#FFFFFF", "#EEEEEE", "#DDDDDD", "#CCCCCC", "#BBBBBB", "#AAAAAA", "#999999", "#888888", "#777777", "#666666", "#555555", "#444444", "#333333", "#222222", "#111111", "#000000")
+customGreen0 = "#DeF7E9"
+customGreen = "#71CA97"
+customBlue0 = "#Dfecf7"
+customBlue = "#71aac9"
+
 # show_col(palette)
 # show_col(g.code)
 underTheme <- theme(panel.background = element_rect(fill = g.code[3], size = 2, linetype = "solid"),
                     panel.grid.major = element_line(size = 0.5, linetype = 'solid', colour = "white"), 
                     panel.grid.minor = element_line(size = 0.25, linetype = 'solid', colour = "white"))
 
-
-#FUNCTIONS FOR TABLE PAGE ---------------------------------------------------------------------
-# Function to output the excel file
-runTally <- function(data, parkCode, appendingSheet) {
-  appendingFilePath <- NULL
-  if (appendingSheet) { # If er are adding to existing data, grab the file location
+file.opened <- function(path) {
+  suppressWarnings(
+    "try-error" %in% class(
+      try(file(path, 
+               open = "w"), 
+          silent = TRUE
+      )
+    )
+  )
+}
+#!#########################################################################
+#!###################      Code for the table page     ####################
+#!#########################################################################
+#* Function to output the excel file
+runTally <- function(data, parkCode, appendingSheet) { # Takes in the data, the parkCode (XXXX), and a boolean for appending
+  appendingFilePath <- NULL # Initalizing the boolean to NULL
+  if (appendingSheet) { # If we are adding to existing data, grab the file location
     appendingFilePath <- tk_choose.files(caption = "Select the excel document that you would like to append this data to:")
+    if (identical(appendingFilePath, character(0))) {
+      appendingSheet <- FALSE
+      print("No File Selected. Please Try again or de-select the appending sheet option.")
+      return(NULL)
+    }
   }
   num_tally_sheets <- nrow (data) # Number of tally sheets
   tally_frame <- data #Copying the data into a new dataframe
@@ -71,25 +97,35 @@ runTally <- function(data, parkCode, appendingSheet) {
     for (num_pass in 1:6) { # For each column
       if (single_vals[num_pass] != 0) {  # If the number is not 0
         for (count in 1:single_vals[num_pass]) { # Iterate that many of times
-          row <- c(i, tally_frame$ENTRANCE[i], format(as.Date(tally_frame$DATE[i], format="%m/%d/%Y"), "%B"), tally_frame$DATE[i], format(as.Date(tally_frame$DATE[i], format="%m/%d/%Y"), "%A"), tally_frame$TIME[i], single_vals[num_pass])
+          row <- c(i, tally_frame$ENTRANCE[i], format(as.Date(tally_frame$DATE[i], format="%m/%d/%Y"), "%B"), tally_frame$DATE[i], format(as.Date(tally_frame$DATE[i], format="%m/%d/%Y"), "%A"), tally_frame$TIME[i], num_pass)
           second_sheet <- rbind(second_sheet, row)
         }
       }
     }
     seven_vals <- as.numeric(tally_frame[i, c("X_SEVEN_PLUS")][[1]]) # 7+ values
-    for (val in seven_vals) { # For each car add the row
-      row <- c(i, tally_frame$ENTRANCE[i], format(as.Date(tally_frame$DATE[i], format="%m/%d/%Y"), "%B"), tally_frame$DATE[i], format(as.Date(tally_frame$DATE[i], format="%m/%d/%Y"), "%A"), tally_frame$TIME[i], val)
-      second_sheet <- rbind(second_sheet, row)
+    if (length(seven_vals) != 0) {
+      for (index in 1:length(seven_vals)) { # For each car add the row
+        row <- c(i, tally_frame$ENTRANCE[i], format(as.Date(tally_frame$DATE[i], format="%m/%d/%Y"), "%B"), tally_frame$DATE[i], format(as.Date(tally_frame$DATE[i], format="%m/%d/%Y"), "%A"), tally_frame$TIME[i], seven_vals[index])
+        second_sheet <- rbind(second_sheet, row)
+      }
     }
   }
   colnames(second_sheet) <- c("Obs_Num", "Entrance", "Month", "Date", "Day_of_Week", "Time_of_Day", "Occupants") # Resetting the column names for the sheet
   second_sheet$Obs_Num <- seq(1:nrow(second_sheet))
-  if (appendingSheet) {
+  if (appendingSheet & file.opened(appendingFilePath)) {
+    print("ERROR: File path selected is currently open. Please close the file and try again!")
+    print(paste("FILEPATH: ", appendingFilePath))
+  }
+  else if (appendingSheet) {
     orig_sheet_one <- read_excel(appendingFilePath, 1)
     orig_sheet_two <- read_excel(appendingFilePath, 2)
     updated_sheet_one <- bind_rows(orig_sheet_one, first_sheet)
     updated_sheet_two <- bind_rows(orig_sheet_two, second_sheet)
-    updated_sheet_one$Obs_Num <- seq(1:nrow(updated_sheet_one))
+    updated_sheet_one$Num_of_Observations <- as.numeric(updated_sheet_one$Num_of_Observations)
+    updated_sheet_two$Occupants <- as.numeric(updated_sheet_two$Occupants)
+    updated_sheet_one <- updated_sheet_one[order(updated_sheet_one$Date), ]
+    updated_sheet_two <- updated_sheet_two[order(updated_sheet_two$Date, updated_sheet_two$Occupants), ]
+    updated_sheet_one$Sheet_Num <- seq(1:nrow(updated_sheet_one))
     updated_sheet_two$Obs_Num <- seq(1:nrow(updated_sheet_two))
 
     filePathList <- unlist(strsplit(appendingFilePath, "/"))
@@ -105,54 +141,167 @@ runTally <- function(data, parkCode, appendingSheet) {
     print(paste("Outputted File:", filename))
   }
 }
+#* Converting a string to a consistent date format
+convertDate <- function(date_string) {
+  date <- parse_date_time(date_string, orders = c("mdy", "dmy", "ymd", "bY"))
+  return(format(date, "%m/%d/%y"))
+}
+#* Formatting the AM/PM string to filter out lower case characters and spaces
+formatTime <- function(text) {
+  text <- toupper(gsub(" ", "", text))
+  return(text)
+}
 
-#FUNCTIONS FOR CHARTS PAGE ---------------------------------------------------------------------
+#!##########################################################################
+#!###################      Code for the charts page     ####################
+#!##########################################################################
 
-# Function to format the data to get the month number
-formatData <- function(sheet) {
+#* Get a unique list for the entrances
+getEntrances <- function(data) {
+  return(unique(data$entrance))
+}
+
+formatSheet1 <- function(sheet) {
+  sheet$Date <- as.Date(sheet$Date, format="%m/%d/%y")
+  colnames(sheet) <- c("sheetNum", "numObs", "entrance", "date", "month", "dayOfWeek", "timeOfDay")
+  suppressWarnings(sheet <- sheet %>%
+    mutate(monthNum = as.integer(format(date, "%m")),
+          sheetNum = as.integer(sheetNum),
+          numObs = as.integer(numObs)))
+  return(sheet)
+}
+
+formatSheet2 <- function(sheet) {
   sheet$Date <- as.Date(sheet$Date, format="%m/%d/%y")
   colnames(sheet) <- c("obsNum", "entrance", "month", "date", "dayOfWeek", "timeOfDay", "occupants")
-    suppressWarnings(sheet <- sheet %>%
-        mutate(monthNum = as.integer(format(date, "%m")),
-              occupants = as.integer(occupants),
-              obsNum = as.integer(obsNum)))
-    return(sheet)
+  suppressWarnings(sheet <- sheet %>%
+      mutate(monthNum = as.integer(format(date, "%m")),
+            occupants = as.integer(occupants),
+            obsNum = as.integer(obsNum)))
+  return(sheet)
 }
 
-# Plot for the ppv averages per month
-eda_PPV_Scatterplot <- function(input) {
-  data <- input %>%
-    group_by(monthNum) %>%
-      summarise(total = sum(occupants),
-                ppv = sum(occupants)/length(occupants))
-  suppressWarnings(plot <- ggplot(data=data) + 
-      geom_point(aes(x=as.integer(monthNum), y=ppv), color=g.code[12]) + 
-      geom_hline(yintercept=mean(data$ppv), linetype="dashed", color=palette[1]) + 
-      labs(x="Month", y="Persons Per Vehicle", title="PPV by Month") + 
-      theme(axis.title=element_text(face="bold"), axis.text.x = element_text(angle = 45, hjust = 1)) + 
-      scale_x_discrete(limits=1:12, labels= month.name) + 
-      underTheme)
-  return(list(data=data, plot=plot))
+getTableEDA <- function(sheet_one, sheet_two) {
+  table <- data.frame(col1 = c("Sheets returned", "Sheets with 0 obs", "Vehicles observed", "Min passengers", "Max passengers", "Mean passengers", "Median passengers"), 
+                    col2 = c(nrow(sheet_one), nrow(filter(sheet_one, numObs == 0)), nrow(sheet_two), min(sheet_two$occupants), max(sheet_two$occupants), round(mean(sheet_two$occupants), 2), round(median(sheet_two$occupants), 2)))
+  return(table)
 }
 
-# Plot for the Histograms
-eda_PPV_Bar_Plot <- function(data, monthFilter = -1) {
-  name <- "PPV Data for Jan-Dec"
-  if (monthFilter != -1) {
-    data <- data %>%
-      filter(monthNum == monthFilter)
-    name <- paste("PPV Data for", month.name[monthFilter])
+getTableMonth <- function(sheet_one, sheet_two) {
+  table1 <- sheet_one %>%
+      group_by(monthNum) %>%
+      summarise(numSheets = n(),
+              minVehObs = min(numObs),
+              maxVehObs = max(numObs))
+  table2 <- sheet_two %>%
+      group_by(monthNum) %>%
+      summarise(numObs = n(),
+              minOccupancy = min(occupants),
+              maxOccupancy = max(occupants),
+              ppv = round(mean(occupants), 2)) %>%
+      mutate(numObsPrcnt = round(numObs / nrow(sheet_two), 2))
+  table3 <- left_join(table1, table2, by="monthNum")
+  table3 <- table3 %>%
+      mutate(monthName = month.name[monthNum])
+  table3 <- table3[, c("monthName", "numSheets", "numObs", "numObsPrcnt", "ppv", "minVehObs", "maxVehObs", "minOccupancy", "maxOccupancy")]
+  colnames(table3) <- c("Month", "Number of Tallysheets", "Number of Observations", "Number of Obs (%)", "Persons Per Vehicle (PPV)", "Min Vehicles Observed", "Max Vehicles Observed", "Min Vehicle Occupancy", "Max Vehicle Occupancy")
+  return(table3)
+}
+
+getTableTOD <- function(sheet_one) {
+  table <- sheet_one %>%
+      group_by(timeOfDay) %>%
+      summarise(count = n(),
+              mean = round(mean(numObs), 2),
+              sd = round(sd(numObs), 2),
+              se = round(sd(numObs)/length(numObs), 2),
+              min = min(numObs),
+              max = max(numObs))
+  colnames(table) <- c("Time of Day", "Number of One Hour Collection Periods", "Mean Number of Observed Vehicles", "Standard Deviation (of mean)", "Standard Error (of mean)", "Minimum Number of Observed Vehicles", "Maximum Number of Observed Vehicles")
+  return(table)
+}
+
+getTableDOW <- function(sheet_one) {
+  table <- sheet_one %>%
+      group_by(dayOfWeek) %>%
+      summarise(count = n(),
+              mean = round(mean(numObs), 2),
+              sd = round(sd(numObs), 2),
+              se = round(sd(numObs)/length(numObs), 2),
+              min = min(numObs),
+              max = max(numObs))
+  colnames(table) <- c("Day of Week", "Number of One Hour Collection Periods", "Mean Number of Observed Vehicles", "Standard Deviation (of mean)", "Standard Error (of mean)", "Minimum Number of Observed Vehicles", "Maximum Number of Observed Vehicles")
+  return(table)
+}
+
+getFigPPV <- function(data) {
+    plotData <- data %>%
+        group_by(monthNum) %>%
+        summarise(Mean = round(mean(occupants), 2)) %>%
+        mutate(Month = month.name[monthNum])
+    plot <- ggplot(plotData) + 
+        geom_point(aes(x=monthNum, y=Mean, text=paste('Month: ', Month, '<br>Mean: ', Mean))) + 
+        geom_hline(yintercept=mean(plotData$Mean), color="red", linetype='dashed') + 
+        labs(x="Month", y="PPV") + 
+        theme(axis.text.x = element_text(angle = 45,hjust=1)) + 
+        scale_x_continuous(labels = month.name, breaks = seq(1, 12))
+    return(list("plot" = plot, "data" = plotData))
+}
+
+getFigHistogram <- function(data, monthSelector) {
+  if (monthSelector != "-1") {
+    data <- filter(data, monthNum == as.integer(monthSelector))
   }
-  table <- as.data.frame(table(data$occupants))
-  colnames(table) <- c("num", "count")
-  plot <- ggplot(data=table, aes(x=num, y=count)) + 
-    geom_bar(fill=palette[11], stat="identity", alpha=1) + 
-    theme(axis.title=element_text(face="bold"), plot.title=element_text(face="bold")) + 
-    underTheme +
-    labs(x="Number of Occupants", y="Number of Observations", title = name) + 
-    geom_text(aes(label=count, y = count + 2), vjust=2)
-  return(list(data=data, table = table, plot=plot))
+  data <- data %>%
+    group_by(occupants) %>%
+    summarise(count = n())
+  colnames(data) <- c("Occupants", "Count")
+  plot <- ggplot(data) + 
+              geom_bar(stat = "identity", aes(x=Occupants, y = Count, text=paste('Occupants: ', Occupants, '<br>Count: ', Count)), color=customBlue, fill=customBlue) +
+              labs(x="Occupants", y="Frequency")
+  return(list("plot" = plot, "data" = data))
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#!##########################################################################
+#!###################      Code for the custom page     ####################
+#!##########################################################################
+
 
 # Plot for the ranges
 figRange <- function(input) {
@@ -267,15 +416,15 @@ poiReg <- function(data) {
   plotData$xn <- 1:nrow(plotData)
   plot <- ggplot(data = plotData) + 
     geom_rect(aes(xmin=xn-0.06, xmax=xn+0.06, ymin=lwr_bnd, ymax=upr_bnd, fill=as.factor(xn)), alpha=0.6) + 
-    geom_rect(aes(xmin=xn-0.01, xmax=xn+0.01, ymin=lwr_bnd, ymax=upr_bnd), alpha=0.8) + 
+    geom_rect(aes(xmin=xn-0.01, xmax=xn+0.01, ymin=lwr_bnd, ymax=upr_bnd), alpha=1) + 
     geom_point(aes(x=xn, y=e_coeff), size=3, shape=18) + 
     # geom_point(aes(x=xn, y=upr_bnd), size=2) + 
     # geom_point(aes(x=xn, y=lwr_bnd), size=2) + 
-    geom_segment(aes(x=xn-0.06, y=upr_bnd, xend=xn+0.06, yend=upr_bnd), linewidth=1.5, alpha=0.4) + 
-    geom_segment(aes(x=xn-0.06, y=lwr_bnd, xend=xn+0.06, yend=lwr_bnd), linewidth=1.5, alpha=0.4) + 
-    geom_text(aes(label = round(e_coeff, 1), x=xn, y=e_coeff), nudge_x=0.3) + 
-    geom_text(aes(label = round(upr_bnd, 1), x=xn, y=upr_bnd), nudge_x=0.3) + 
-    geom_text(aes(label = round(lwr_bnd, 1), x=xn, y=lwr_bnd), nudge_x=0.3) + 
+    geom_segment(aes(x=xn-0.06, y=upr_bnd, xend=xn+0.06, yend=upr_bnd), linewidth=1.5, alpha=1) + 
+    geom_segment(aes(x=xn-0.06, y=lwr_bnd, xend=xn+0.06, yend=lwr_bnd), linewidth=1.5, alpha=1) + 
+    geom_text(aes(label = round(e_coeff, 2), x=xn, y=e_coeff), nudge_x=0.3) + 
+    geom_text(aes(label = round(upr_bnd, 2), x=xn, y=upr_bnd), nudge_x=0.3) + 
+    geom_text(aes(label = round(lwr_bnd, 2), x=xn, y=lwr_bnd), nudge_x=0.3) + 
     scale_x_discrete(limits = plotData$group) + 
     labs(x="Group", y="PPV") + 
     ylim(min(plotData$lwr_bnd) - 1, max(plotData$upr_bnd) + 1) + 
@@ -283,15 +432,6 @@ poiReg <- function(data) {
   return(list("data" = data, "table" = table, "plot" = plot))
 }
 # # Function to apply the ranges to the data
-
-# filteredData <- applyRanges(testData, checkRange(test_ranges)$ranges)
-
-# ppv_data <- customPlot_ppv_data(filteredData)
-# ggplotly(customPlot_ppv(ppv_data))
-
-getEntrances <- function(data) {
-  return(unique(data$entrance))
-}
 
 filterData <- function(data, filterNum) {
   filters <- c("0" = "entrance", "1" = "timeOfDay", "2" = "dayOfWeek")

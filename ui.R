@@ -1,11 +1,11 @@
-HEADER <- dashboardHeader(title="NPS PPV Study App")
+HEADER <- dashboardHeader(title="NPS PPV Study App") # Header Name
 
 SIDEBAR <- dashboardSidebar(
   sidebarMenu(
     # Setting id makes input$tabs give the tabName of currently-selected tab
     id = "tabs",
-    menuItem("Table", icon = icon("th"), tabName = "table"),
-    menuItem("Charts", icon = icon("chart-simple"), tabName = "chart", badgeLabel = "new", badgeColor = "green")
+    menuItem("Data Entry", icon = icon("pen-to-square"), tabName = "table"),
+    menuItem("Insights", icon = icon("chart-simple"), tabName = "chart", badgeLabel = "new", badgeColor = "green")
   )
 )
 
@@ -107,58 +107,73 @@ BODY <- dashboardBody(
     tabItem(tabName = "chart",
       fluidPage(
         fluidRow(
-          h2("Interactive Charts and Visualizations"),
+          h1("Interactive Charts and Visualizations"),
           actionButton("loadData", "Load Data", style="color: #fff; background-color: #6161ff"),
           br(),
           br(),
           tabBox(width=12,
-            tabPanel("EDA",
+            tabPanel("Data",
+              tabsetPanel(
+                id = 'dataset',
+                tabPanel("Tallysheets", DT::dataTableOutput("data_tallysheets")),
+                tabPanel("Vehicles", DT::dataTableOutput("data_vehicles"))
+              )
+            ),
+            tabPanel("Tables",
               fluidRow(
-                #TODO All of this page!
-                h2("Main Plot"),
-                column(1,
-                  h3("Table"),
-                  tableOutput("plot1_table")
-                ),
-                column(1,
-                  h3("Stats"),
-                  tableOutput("plot1_stat_table")
-                ),
-                column(6,
-                  # tableOutput("plot1_table")
-                  plotlyOutput("plot1")
+                column(12,
+                  h1("Overall Statistics"),
+                  # tableOutput("table_eda"),
+                  valueBoxOutput("vb_sheets_returned", width=3),
+                  valueBoxOutput("vb_sheets_with_zero", width=3),
+                  valueBoxOutput("vb_vehicles", width=3)
                 )
               ),
-              br(),
-              br(),
-              br(),
-              br(),
-              br(),
-              br(),
               fluidRow(
-                #TODO All of this page!
-                h2("Bar Plot"),
+                column(12,
+                  valueBoxOutput("vb_min", width=3),
+                  valueBoxOutput("vb_max", width=3),
+                  valueBoxOutput("vb_mean", width=3),
+                  valueBoxOutput("vb_median", width=3)
+                )
+              ),
+              fluidRow(
+                column(7,
+                  h1("By Month"),
+                  formattableOutput("table_month")
+                )
+              ),
+              fluidRow(
+                column(5,
+                  h1("By Day of the Week"),
+                  formattableOutput("table_dow")
+                ),
+                column(4,
+                  h1("By Time of Day"),
+                  formattableOutput("table_tod")
+                )
+              )
+            ),
+            tabPanel("Charts",
+              fluidRow(
+                h3("PPV by Month"),
+                column(2,
+                  formattableOutput("figPPVData")
+                ),
+                column(4,
+                  plotlyOutput("figPPV")
+                )
+              ),
+              fluidRow(
+                h3("Histogram"),
                 selectInput("monthSelector", "Select Month", 
                   choices = c("All Months" = -1, "January" = "1", "Febuary" = "2", "March" = "3", "April" = "4", "May" = "5", "June" = "6", "July" = "7", "August" = "8", "September" = "9", "October" = "10", "November" = "11", "December" = "12")),
-                column(1,
-                  h3("Table"),
-                  tableOutput("plot2_table")
+                column(2,
+                  formattableOutput("figHistData")
                 ),
-                column(1,
-                  h3("Stats"),
-                  tableOutput("plot2_stat_table")
-                ),
-                column(6,
-                  plotlyOutput("plot2")
+                column(4,
+                  plotlyOutput("figHist")
                 )
-              ),
-              br(),
-              br(),
-              fluidRow(
-                h2("Filter By..."),
-                selectInput("filterSelector", "Select Filter", 
-                  choices = c("Location" = 0, "Time of Day" = 1, "Day of Week" = 2), selected = "Location"),
-                tableOutput("filterTable")
               )
             ),
             tabPanel("Custom",
