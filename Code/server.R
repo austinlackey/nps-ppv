@@ -1,3 +1,19 @@
+library(tidyverse)
+library(openxlsx)
+library(tcltk)
+library(readxl)
+library(plotly)
+library(scales)
+library(stringr)
+library(anytime)
+library(patchwork)
+library(shiny)
+library(shinyjs)
+library(shinythemes)
+library(shinydashboard)
+library(shinyWidgets)
+library(formattable)
+library(lubridate)
 data <- NULL # Global Data Initialization
 
 SERVER = shinyServer(function(input, output, session) {
