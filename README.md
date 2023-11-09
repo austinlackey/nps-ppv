@@ -14,7 +14,7 @@ These data points need to converted into a consistent format that can be used fo
 Conducting PPV analysis of parks within the National Park Service can be a very time consuming task. 
 Various parks may have hundreds of cars that enter every hour, entering these data points can become very tedious. 
 This `RShiny` web app is used as a tool to help automate the data entry process and allow more time for analysis.
-
+a
 ## Data Format
 Below are some examples for the format of the data that is used as input and output for the app.
 
@@ -44,4 +44,10 @@ Below are some examples for the format of the data that is used as input and out
 
 ## App Structure
 The app is broken up into 2 main sections: `Data Entry` and `Insights`.
+
+### Data Entry Page
+Below is a screenshot of the `Data Entry` page of the app. The app was designed with the user in mind, so the app is very intuitive and easy to use. Adding and removing sheets are as simple as clicking a button.
+If the user has to step away from the app, they can save their progress to an .xlsx file and append to it later. The app also automatically formats the data to the correct format. Doing this manually in Excel can allow for human error, so this is a very useful feature. Some parks have multiple lanes of traffic, so the app allows data entry for multiple lanes and automatically combines the data into a single number, (again, this is to reduce human error).
 ![alt text](docs/data-entry.png)
+
+### Insights Page
