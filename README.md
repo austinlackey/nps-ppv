@@ -56,3 +56,4 @@ regression. By uploading the data they previously entered, the app will automati
 
 #### Data Tab
 ![alt text](docs/insights-data.png)
+s
