@@ -54,8 +54,8 @@ If the user has to step away from the app, they can save their progress to an .x
 ![alt text](docs/data-entry.png)
 
 ### Insights Page
-The Insights Page was designed to give the end-user a quick yet powerful way to visualize and analyze their data with Poisson
-regression. By uploading the data they previously entered, the app will automatically run a Poisson regression and output the results in a conditional formatted table. This gives the end-user a detailed summary of the shape of their data as well as any anomalies that may be present. If the user wants to dig deeper they can apply custom date ranges for Poisson regression and visualize it with a Gannt chart. To test wether these date ranges are statistically significant, the app will run a Poisson regression and output a graph with the mean and 95% confidence intervals. This allows for the end-user to quickly apply different combinations of date ranges to see what the best fit is for their data.
+The Insights Page was designed to give the end-user a quick yet powerful way to visualize and analyze their data with `Poisson
+regression`. By uploading the data they previously entered, the app will automatically run a `Poisson regression` and output the results in a conditional formatted table. This gives the end-user a detailed summary of the shape of their data as well as any anomalies that may be present. If the user wants to dig deeper they can apply custom date ranges for `Poisson regression` and visualize it with a Gannt chart. To test wether these date ranges are statistically significant, the app will run a `Poisson regression` and output a graph with the mean and 95% confidence intervals. This allows for the end-user to quickly apply different combinations of date ranges to see what the best fit is for their data.
 
 #### Data Tab
 ![alt text](docs/insights-data.png)
@@ -70,3 +70,4 @@ The tables tab is where the end-user will spend most of their time. This tab con
     <img src="docs/insights-charts-1.png" height="620" />
     <img src="docs/insights-charts-2.png" height="620" /> 
 </p>
+The charts tab is where the end-user can visualize the data with histograms and scatter plots. The histograms can be split by month or aggregated by all months. The scatter plot shows the average across all months which can be useful in choosing how to group the data. These charts are rendered in conjunction with `ggplot2` and `Plotly.js` which allows for the end-user to interact with the visuals and download them as images for sharing.
