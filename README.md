@@ -67,7 +67,7 @@ The tables tab is where the end-user will spend most of their time. This tab con
 
 #### Charts Tab
 <p float="left">
-    <img src="docs/insights-charts-1.png" height="620" />
-    <img src="docs/insights-charts-2.png" height="620" /> 
+    <img src="docs/insights-charts-1.png" height="400" />
+    <img src="docs/insights-charts-2.png" height="400" /> 
 </p>
 The charts tab is where the end-user can visualize the data with histograms and scatter plots. The histograms can be split by month or aggregated by all months. The scatter plot shows the average across all months which can be useful in choosing how to group the data. These charts are rendered in conjunction with `ggplot2` and `Plotly.js` which allows for the end-user to interact with the visuals and download them as images for sharing.
