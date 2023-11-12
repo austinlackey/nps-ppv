@@ -67,6 +67,6 @@ The tables tab is where the end-user will spend most of their time. This tab con
 
 #### Charts Tab
 <p float="left">
-    <img src="docs/insights-charts-1.png" height="600" />
-    <img src="docs/insights-charts-2.png" height="600" /> 
+    <img src="docs/insights-charts-1.png" height="550" />
+    <img src="docs/insights-charts-2.png" height="550" /> 
 </p>
