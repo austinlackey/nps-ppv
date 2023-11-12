@@ -1,10 +1,3 @@
-# load.lib <- c("tidyverse", "openxlsx", "tcltk", "readxl", "plotly", "scales", 
-#               "stringr", "anytime", "patchwork", "shiny", "shinyjs", "shinythemes",
-#               "shinydashboard", "shinyWidgets", "formattable", "lubridate")
-# install.lib <- load.lib[!load.lib %in% installed.packages()]
-# for(lib in install.lib) install.packages(lib,dependencies=TRUE)
-# sapply(load.lib,require,character=TRUE)
-
 library(tidyverse)
 library(openxlsx)
 library(tcltk)
@@ -297,42 +290,6 @@ getFigHistogram <- function(data, monthSelector) {
               labs(x="Occupants", y="Frequency")
   return(list("plot" = plot, "data" = data))
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 #!##########################################################################
 #!###################      Code for the custom page     ####################

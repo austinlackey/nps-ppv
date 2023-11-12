@@ -71,3 +71,7 @@ The tables tab is where the end-user will spend most of their time. This tab con
     <img src="docs/insights-charts-2.png" height="400" /> 
 </p>
 The charts tab is where the end-user can visualize the data with histograms and scatter plots. The histograms can be split by month or aggregated by all months. The scatter plot shows the average across all months which can be useful in choosing how to group the data. These charts are rendered in conjunction with `ggplot2` and `Plotly.js` which allows for the end-user to interact with the visuals and download them as images for sharing.
+
+#### Custom Tab
+![alt text](docs/insights-custom-1.png)
+The custom tab is where the end-user can apply custom date ranges to a `Poission regression` and visualize not only the 95% confidence intervals, but also a Gannt chart that shows the date ranges over the year. This can be useful in seeing where one season ends and another begins, especially in cases where one season may begin towards the end of the year and ends at the beginning of the next year (i.e winter seasons).
