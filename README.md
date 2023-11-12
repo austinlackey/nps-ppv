@@ -56,4 +56,14 @@ regression. By uploading the data they previously entered, the app will automati
 
 #### Data Tab
 ![alt text](docs/insights-data.png)
-s
+The data tab allows the user to see the data in a table format. They can sort columns, or search for specific values. This might be useful if the user wants to see the data directly before running any further analysis.
+
+#### Tables Tab
+![alt text](docs/insights-tables.png)
+The tables tab is where the end-user will spend most of their time. This tab contains statistic cards at the top that give a quick view of their data shape as well as Min/Max/Mean/Median values. The tab also contains conditionally formatted tables split by month, day of the week, as well as the time of day. At a quick glance the end-user can see which months dominate in terms of visitation, and what days of the week and times of day are the busiest. As seen in the screenshot below, Although there are more vehicles that enter the park in May, the average number of occupants per vehicle is higher in July. This can be a valuable insight for the end-user to consider when changing how they estimate visitation.
+
+#### Charts Tab
+<p float="left">
+    <img src="docs/insights-charts-1.png" width="45%" />
+    <img src="docs/insights-charts-2.png" width="45%" /> 
+</p>
