@@ -419,7 +419,7 @@ poiReg <- function(data) {
     geom_text(aes(label = round(upr_bnd, 2), x=xn, y=upr_bnd), nudge_x=0.3) + 
     geom_text(aes(label = round(lwr_bnd, 2), x=xn, y=lwr_bnd), nudge_x=0.3) + 
     scale_x_discrete(limits = plotData$group) + 
-    labs(x="Group", y="PPV") + 
+    labs(x="Group", y="PPV", fill="Group") + 
     ylim(min(plotData$lwr_bnd) - 1, max(plotData$upr_bnd) + 1) + 
     underTheme
   return(list("data" = data, "table" = table, "plot" = plot))
