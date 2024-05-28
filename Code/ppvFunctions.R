@@ -228,7 +228,7 @@ getTableMonth <- function(sheet_one, sheet_two) {
               minOccupancy = min(occupants),
               maxOccupancy = max(occupants),
               ppv = round(mean(occupants), 2)) %>%
-      mutate(numObsPrcnt = round(numObs / nrow(sheet_two), 2))
+      mutate(numObsPrcnt = round((numObs / nrow(sheet_two)) * 100, 0))
   table3 <- left_join(table1, table2, by="monthNum")
   table3 <- table3 %>%
       mutate(monthName = month.name[monthNum])
@@ -268,8 +268,8 @@ getFigPPV <- function(data) {
         group_by(monthNum) %>%
         summarise(Mean = round(mean(occupants), 2)) %>%
         mutate(Month = month.name[monthNum])
-    plot <- ggplot(plotData) + 
-        geom_point(aes(x=monthNum, y=Mean, text=paste('Month: ', Month, '<br>Mean: ', Mean))) + 
+    plot <- ggplot(plotData, aes(text=paste('Month: ', Month, '<br>Mean: ', Mean))) + 
+        geom_point(aes(x=monthNum, y=Mean)) + 
         geom_hline(yintercept=mean(plotData$Mean), color="red", linetype='dashed') + 
         labs(x="Month", y="PPV") + 
         theme(axis.text.x = element_text(angle = 45,hjust=1)) + 
@@ -285,8 +285,8 @@ getFigHistogram <- function(data, monthSelector) {
     group_by(occupants) %>%
     summarise(count = n())
   colnames(data) <- c("Occupants", "Count")
-  plot <- ggplot(data) + 
-              geom_bar(stat = "identity", aes(x=Occupants, y = Count, text=paste('Occupants: ', Occupants, '<br>Count: ', Count)), color=customBlue, fill=customBlue) +
+  plot <- ggplot(data, aes(text=paste('Occupants: ', Occupants, '<br>Count: ', Count))) + 
+              geom_bar(stat = "identity", aes(x=Occupants, y = Count), color=customBlue, fill=customBlue) +
               labs(x="Occupants", y="Frequency")
   return(list("plot" = plot, "data" = data))
 }
@@ -385,7 +385,10 @@ poiReg <- function(data) {
   colnames(table) <- c("Group", "Total", "PPV")
   group_names <- sort(unique(data$group))
   data$group <- relevel(factor(data$group, levels = group_names), ref=group_names[1])
+  print("1")
+  print(data$group)
   reg <- glm(formula=occupants ~ group, data=data, family=poisson)
+  print("2")
   reg_sum <- as.data.frame(summary(reg)$coefficients)
   # coeff
   output <- data.frame(coeff = reg_sum[,1])
