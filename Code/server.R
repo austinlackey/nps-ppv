@@ -108,21 +108,39 @@ SERVER = shinyServer(function(input, output, session) {
 
   #* Load in an excel spreadsheet and calculate the tables and figures
   observeEvent(input$loadData, {
-    chart_data_path <- tk_choose.files(caption = "Select excel spreadsheet:")
-    edaData$sheet_one_data <- formatSheet1(read_excel(chart_data_path, sheet=1))
-    edaData$sheet_two_data <- formatSheet2(read_excel(chart_data_path, sheet=2))
-    edaData$sheet_one_data_table <- edaData$sheet_one_data
-    edaData$sheet_two_data_table <- edaData$sheet_two_data
-    colnames(edaData$sheet_one_data_table) <- c("Sheet Number", "Number of Observations", "Entrance", "Date", "Month", "Day of Week", "Time of Day", "Month Number")
-    colnames(edaData$sheet_two_data_table) <- c("Observation Number", "Entrance", "Month", "Date", "Day of Week", "Time of Day", "Occupants", "Month Number")
-    edaData$table_eda <- getTableEDA(edaData$sheet_one_data, edaData$sheet_two_data)
-    edaData$table_month <- getTableMonth(edaData$sheet_one_data, edaData$sheet_two_data)
-    edaData$fig_hist <- getFigHistogram(edaData$sheet_two_data, input$monthSelector)$plot
-    edaData$fig_hist_data <- getFigHistogram(edaData$sheet_two_data, input$monthSelector)$data
-    edaData$table_tod <- getTableTOD(edaData$sheet_one_data)
-    edaData$table_dow <- getTableDOW(edaData$sheet_one_data)
-    edaData$fig_ppv <- getFigPPV(edaData$sheet_two_data)$plot
-    edaData$fig_ppv_data <- getFigPPV(edaData$sheet_two_data)$data %>% select(c("Month", "Mean"))
+    tryCatch({
+          # Code to run
+          chart_data_path <- tk_choose.files(caption = "Select excel spreadsheet:")
+          edaData$sheet_one_data <- formatSheet1(read_excel(chart_data_path, sheet=1))
+          edaData$sheet_two_data <- formatSheet2(read_excel(chart_data_path, sheet=2))
+          edaData$sheet_one_data_table <- edaData$sheet_one_data
+          edaData$sheet_two_data_table <- edaData$sheet_two_data
+          colnames(edaData$sheet_one_data_table) <- c("Sheet Number", "Number of Observations", "Entrance", "Date", "Month", "Day of Week", "Time of Day", "Month Number")
+          colnames(edaData$sheet_two_data_table) <- c("Observation Number", "Entrance", "Month", "Date", "Day of Week", "Time of Day", "Occupants", "Month Number")
+          edaData$table_eda <- getTableEDA(edaData$sheet_one_data, edaData$sheet_two_data)
+          edaData$table_month <- getTableMonth(edaData$sheet_one_data, edaData$sheet_two_data)
+          edaData$fig_hist <- getFigHistogram(edaData$sheet_two_data, input$monthSelector)$plot
+          edaData$fig_hist_data <- getFigHistogram(edaData$sheet_two_data, input$monthSelector)$data
+          edaData$table_tod <- getTableTOD(edaData$sheet_one_data)
+          edaData$table_dow <- getTableDOW(edaData$sheet_one_data)
+          edaData$fig_ppv <- getFigPPV(edaData$sheet_two_data)$plot
+          edaData$fig_ppv_data <- getFigPPV(edaData$sheet_two_data)$data %>% select(c("Month", "Mean"))
+          showNotification("Successfully Imported Data.", type="message")
+        },
+        warning = function(w) {
+          # Catch Warnings
+          print(w)
+          showNotification(paste("WARNING: ", w$message), type="warning")
+        },
+        error = function(e) {
+          # Catch Errors
+          print(e)
+          showNotification(paste("ERROR: Issue with dataset. Use a dataset created by PPV App."), type="error")
+        },
+        finally = {
+          # Code to always run
+        }
+        )
   })
 
   #* Code to update the data that used a month filter
@@ -372,7 +390,22 @@ SERVER = shinyServer(function(input, output, session) {
     else {
         custom_Data$fig_range_plot <- figRange(custom_Data$rangeData$ranges_plot)
         custom_Data$filtered_data <- applyRanges(edaData$sheet_two_data, custom_Data$rangeData$ranges)
-        custom_Data$ci_plot <- poiReg(custom_Data$filtered_data)
+        tryCatch({
+          custom_Data$ci_plot <- poiReg(custom_Data$filtered_data)
+          showNotification("Successfully Ran Poisson Regression", type="message")
+        },
+        warning = function(w) {
+          print(w)
+          showNotification(paste("WARNING: ", w$message), type="warning")
+        },
+        error = function(e) {
+          print(e)
+          showNotification(paste("ERROR: ", e$message), type="error")
+        },
+        finally = {
+
+        }
+        )
     }
   })
   output$custom_ci_plot <- renderPlotly({
